@@ -18,26 +18,25 @@ const STATE_DROP_DOWN_SELECTOR = '#state';
 const WHICH_STATE_TO_SCRAP = 'NJUS';
 const TIMES_TO_RETRY = 1000000;
 
-// async function launchBrowser() {
-//   const browser = await puppeteer.launch({
-//     args: chromium.args,
-//     defaultViewport: chromium.defaultViewport,
-//     executablePath: await chromium.executablePath(),
-//     headless: chromium.headless,
-//   });
-
-//   return browser;
-// }
-export const findJobsHandler = async (event, context) => {
-  // const browser = await launchBrowser();
-
+async function launchBrowser() {
   const browser = await puppeteer.launch({
     args: chromium.args,
     defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath(),
     headless: chromium.headless,
   });
-  //
+
+  return browser;
+}
+export const findJobsHandler = async (event, context) => {
+  const browser = await launchBrowser();
+
+  // const browser = await puppeteer.launch({
+  //   args: chromium.args,
+  //   defaultViewport: chromium.defaultViewport,
+  //   executablePath: await chromium.executablePath(),
+  //   headless: chromium.headless,
+  // });
 
   const page = await browser.newPage();
   await page.goto('https://www.upwork.com', {
