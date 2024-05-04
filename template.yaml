@@ -1,0 +1,37 @@
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  findJobsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: findJobs/
+      Handler: app.findJobsHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Timeout: 900
+      Layers:
+        - !Ref upworkApplyBotLayer
+  # -------------------------------
+  submitProposalFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: submitProposal/
+      Handler: app.submitProposalHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Timeout: 900
+      Layers:
+        - !Ref upworkApplyBotLayer
+  # -------------------------------
+  upworkApplyBotLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: upworkApplyBotDependencies/
+      LayerName: twitterOutreacherLayer
+      Description: layer for upworkApplyBot project
+      CompatibleRuntimes:
+        - nodejs20.x
+        - nodejs18.x
+        - nodejs16.x
