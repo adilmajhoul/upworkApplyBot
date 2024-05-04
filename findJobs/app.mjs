@@ -1,10 +1,10 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const chromium = require('@sparticuz/chromium');
+// const puppeteer = require('puppeteer-extra');
+// const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+// const chromium = require('@sparticuz/chromium');
 
-// import puppeteer from 'puppeteer-extra';
-// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-// import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import chromium from '@sparticuz/chromium';
 
 puppeteer.use(StealthPlugin());
 
@@ -28,7 +28,7 @@ const TIMES_TO_RETRY = 1000000;
 
 //   return browser;
 // }
-module.exports.findJobsHandler = async (event, context) => {
+export const findJobsHandler = async (event, context) => {
   // const browser = await launchBrowser();
 
   const browser = await puppeteer.launch({
