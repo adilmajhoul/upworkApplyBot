@@ -5,6 +5,7 @@
 
 import puppeteer from 'puppeteer-extra';
 import chromium from '@sparticuz/chromium';
+import url from 'url';
 
 // promisify callback functions
 // const readFileAsync = promisify(fs.readFile);
@@ -17,11 +18,6 @@ async function launchBrowser() {
   //   headless: chromium.headless,
   // });
   const browser = await puppeteer.launch({
-    defaultViewport: {
-      width: 1300, // set this to a value slightly less than 1366
-      height: 700, // set this to a value slightly less than 768
-      deviceScaleFactor: 1,
-    },
     headless: false,
     executablePath: '/usr/bin/google-chrome-stable',
   });
@@ -225,6 +221,81 @@ class PageProcessor {
     }
     throw new Error(`Failed after ${howManyRetry} attempts`);
   }
+
+  // TODO:
+  async login() {}
 }
 
-export { PageProcessor, launchBrowser };
+// -----------------------------------------------------------------------------
+
+/*
+enum Site {
+  UPWORK = 'upwork',
+}
+type ExpertiseLevel = '1' | '2' | '3';
+type JobDuration = 'hour' | 'day' | 'week' | 'month' | 'more than a month';
+type Location = 'United States' | 'Canada' | 'Mexico';
+type JobsPerPage = 10 | 20 | 50 | 100;
+type SortBy = 'recency' | 'relevance';
+*/
+class JobFilters {
+  // https://www.upwork.com/nx/search/jobs/?contractor_tier=1,2&duration_v3=week&location=United%20States&per_page=50&q=web%20data%20scraping&sort=recency
+
+  constructor(site) {
+    if (site === 'upwork') {
+      this.BASE_URL = 'https://www.upwork.com/nx/search/jobs/';
+
+      this.EXPERTISE_LEVEL_QUERYPARAM = 'contractor_tier';
+      this.JOB_DURATION_QUERYPARAM = 'duration_v3';
+      this.LOCATION = 'location';
+      this.JOBS_PER_PAGE = 'per_page';
+      this.SEARCH_QUERY = 'q';
+      this.SORT_JOBS_BASED_ON = 'sort';
+    }
+  }
+
+  setExpertiseLevel(queryParam) {
+    return url.format({
+      pathname: this.BASE_URL,
+      query: { [this.EXPERTISE_LEVEL_QUERYPARAM]: queryParam },
+    });
+  }
+  setJobDuration(queryParam) {
+    return url.format({
+      pathname: this.BASE_URL,
+      query: { [this.JOB_DURATION_QUERYPARAM]: queryParam },
+    });
+  }
+  setCountry(queryParam) {
+    return url.format({
+      pathname: this.BASE_URL,
+      query: { [this.LOCATION]: queryParam },
+    });
+  }
+  setJobsPerPage(queryParam) {
+    return url.format({
+      pathname: this.BASE_URL,
+      query: { [this.JOBS_PER_PAGE]: queryParam },
+    });
+  }
+  setSearchQuery(queryParam) {
+    return url.format({
+      pathname: this.BASE_URL,
+      query: { [this.SEARCH_QUERY]: queryParam },
+    });
+  }
+  setSortBasedOn(queryParam) {
+    return url.format({
+      pathname: this.BASE_URL,
+      query: { [this.SORT_JOBS_BASED_ON]: queryParam },
+    });
+  }
+}
+
+const jobFilters = new JobFilters('upwork');
+
+const urlwithuslocation = jobFilters.setCountry('United States');
+
+console.log('🚀 ~ urlwithuslocation:', urlwithuslocation);
+
+export { PageProcessor, launchBrowser, JobFilters };
