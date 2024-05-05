@@ -41,7 +41,6 @@ async function main() {
 
   const queyParams = {
     SEARCH_QUERY: '',
-
     EXPERTISE_LEVEL_QUERYPARAM: '',
     JOB_DURATION_QUERYPARAM: '',
     LOCATION: '',
