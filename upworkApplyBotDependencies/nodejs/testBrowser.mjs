@@ -52,6 +52,13 @@ async function main() {
 
   await pageProcessor.login();
 
+  // build url
+
+  const jobFilters = new util.JobFilters();
+  const url = jobFilters.buildURL(queyParams);
+
+  // go to products search page
+
   // remove the 'Complete your profile'
   // await pageProcessor.retry(
   //   async () => {
