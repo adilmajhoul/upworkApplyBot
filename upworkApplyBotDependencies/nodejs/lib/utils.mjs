@@ -2,21 +2,17 @@
 // import * as fs from 'fs';
 // import { promisify } from 'util';
 // import readline from 'readline';
-
 import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import chromium from '@sparticuz/chromium';
 import url from 'url';
+
+puppeteer.use(StealthPlugin());
 
 // promisify callback functions
 // const readFileAsync = promisify(fs.readFile);
 
-async function launchBrowser() {
-  // const browser = await puppeteer.launch({
-  //   args: chromium.args,
-  //   defaultViewport: chromium.defaultViewport,
-  //   executablePath: await chromium.executablePath(),
-  //   headless: chromium.headless,
-  // });
+async function launchBrowserTest() {
   const browser = await puppeteer.launch({
     headless: false,
     executablePath: '/usr/bin/google-chrome-stable',
@@ -25,9 +21,59 @@ async function launchBrowser() {
   return browser;
 }
 
+async function launchBrowser() {
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+
+  return browser;
+}
+// --------------------------------------------------------------------------------
+function getConfig(site) {
+  const upwork = {
+    email: 'adil33zayn@gmail.com',
+    password: 'upworkskhon1-',
+    USERNAME_INPUT_SELECTOR: '#login_username',
+    PASSWORD_INPUT_SELECTOR: '#login_password',
+    CONTUNE_BUTTON_SELECTOR: '#login_password_continue',
+    LOGIN_BUTTON_SELECTOR: '#login_control_continue',
+    ACCEPT_ALL_COOKIES_BUTTON_SELECTOR: '#onetrust-accept-btn-handler',
+    LOGIN_URL: 'https://www.upwork.com/ab/account-security/login',
+    SEARCHBAR_INPUT_SELECTOR:
+      '#navSearchForm-desktop > div.nav-search-input-container > input.nav-search-autosuggest-input',
+    SEARCHBAR_BUTTON_SELECTOR:
+      '#navSearchForm-desktop > div.nav-search-input-container > div > button.nav-btn-icon.nav-search-btn > span > svg',
+    CLICK_TO_SEARCH_BUTTON: '#nav-right > ul > li.air3-search > div > button > span > svg > path',
+    SEARCH_QUERY: 'web scraping',
+    COMPLETE_PROFILE_MODAL_SELECTOR:
+      'body > div.air3-fullscreen-element > div > div.air3-fullscreen-container.is-scrolled-bottom > div > div.profile-completeness-modal-container.d-flex',
+    COMPLETE_PROFILE_MODAL_EXIT_BUTTON_SELECTOR:
+      'body > div.air3-fullscreen-element > div > div.air3-fullscreen-container.is-scrolled-bottom > div > div.profile-completeness-modal-container.d-flex > div.air3-modal-content.profile-completeness-right-side > div.air3-modal-body > button > div > svg',
+    JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR:
+      '#main > div.container > div:nth-child(4) > div > div.air3-grid-container.jobs-grid-container > div.span-12.span-lg-9 > div.air3-card-section.d-lg-flex.justify-space-between > div.d-none.d-lg-block > div > div > div > span',
+    JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR: '#dropdown-menu > li:nth-child(3) > span > span',
+    TIMES_TO_RETRY: 1000,
+    WAIT_BEFORE_RETRY_AGAIN: 10,
+  };
+
+  switch (site) {
+    case 'upwork':
+      return upwork;
+      break;
+
+    default:
+      return site ? 'invalid argument' : 'no argument passed';
+      break;
+  }
+}
+// --------------------------------------------------------------------------------
 class PageProcessor {
-  constructor(page) {
+  constructor(page, site) {
     this.page = page;
+    this.configs = getConfig(site);
   }
 
   async waitForSelector(selector) {
@@ -193,7 +239,7 @@ class PageProcessor {
   async retryReload(page, howManyRetry, waitBeforeRetryAgain) {
     for (let i = 0; i < howManyRetry; i++) {
       try {
-        await page.reload({ waitUntil: 'load', timeout: 60000 }); // Reload the page with a timeout of 60 seconds
+        await this.page.reload({ waitUntil: 'load', timeout: 60000 }); // Reload the page with a timeout of 60 seconds
         return;
       } catch (error) {
         console.error(
@@ -223,7 +269,50 @@ class PageProcessor {
   }
 
   // TODO:
-  async login() {}
+  async login() {
+    await this.retry(
+      async () => {
+        await this.page.goto(this.configs.LOGIN_URL, {
+          waitUntil: 'load',
+        });
+      },
+      this.configs.TIMES_TO_RETRY,
+      this.configs.WAIT_BEFORE_RETRY_AGAIN,
+    );
+
+    // let acceptCookiesElement = await this.page.$(ACCEPT_ALL_COOKIES_BUTTON_SELECTOR);
+    // if (acceptCookiesElement) {
+    //   await pageProcessor.clickSelector(ACCEPT_ALL_COOKIES_BUTTON_SELECTOR);
+    // }
+
+    // wait for next button and usename input
+    await this.retry(
+      async () => {
+        await this.page.waitForSelector(this.configs.USERNAME_INPUT_SELECTOR);
+        await this.page.waitForSelector(this.configs.CONTUNE_BUTTON_SELECTOR);
+
+        await this.page.type(this.configs.USERNAME_INPUT_SELECTOR, this.configs.email);
+
+        await this.page.click(this.configs.CONTUNE_BUTTON_SELECTOR);
+      },
+      this.configs.TIMES_TO_RETRY,
+      this.configs.WAIT_BEFORE_RETRY_AGAIN,
+    );
+
+    // type password and click login
+    await this.retry(
+      async () => {
+        await this.page.waitForSelector(this.configs.PASSWORD_INPUT_SELECTOR);
+        await this.page.waitForSelector(this.configs.LOGIN_BUTTON_SELECTOR);
+
+        await this.page.type(this.configs.PASSWORD_INPUT_SELECTOR, this.configs.password);
+
+        await this.page.click(this.configs.LOGIN_BUTTON_SELECTOR);
+      },
+      this.configs.TIMES_TO_RETRY,
+      this.configs.WAIT_BEFORE_RETRY_AGAIN,
+    );
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -292,10 +381,4 @@ class JobFilters {
   }
 }
 
-const jobFilters = new JobFilters('upwork');
-
-const urlwithuslocation = jobFilters.setCountry('United States');
-
-console.log('🚀 ~ urlwithuslocation:', urlwithuslocation);
-
-export { PageProcessor, launchBrowser, JobFilters };
+export { PageProcessor, launchBrowserTest, launchBrowser, JobFilters };
