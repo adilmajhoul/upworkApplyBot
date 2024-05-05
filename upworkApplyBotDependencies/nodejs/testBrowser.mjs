@@ -17,6 +17,11 @@ const ACCEPT_ALL_COOKIES_BUTTON_SELECTOR = '#onetrust-accept-btn-handler';
 const LOGIN_URL = 'https://www.upwork.com/ab/account-security/login';
 const SEARCHBAR_INPUT_SELECTOR =
   '#navSearchForm-desktop > div.nav-search-input-container > input.nav-search-autosuggest-input';
+const SEARCHBAR_BUTTON_SELECTOR =
+  '#navSearchForm-desktop > div.nav-search-input-container > div > button.nav-btn-icon.nav-search-btn > span > svg';
+
+const CLICK_TO_SEARCH_BUTTON = '#nav-right > ul > li.air3-search > div > button > span > svg > path';
+
 const SEARCH_QUERY = 'web scraping';
 
 const COMPLETE_PROFILE_MODAL_SELECTOR =
@@ -33,9 +38,7 @@ const WAIT_BEFORE_RETRY_AGAIN = 10;
 
 puppeteer.use(StealthPlugin());
 
-async function login() {}
-
-(async function main() {
+async function main() {
   const browser = await util.launchBrowser();
   const page = await browser.newPage();
   const pageProcessor = new util.PageProcessor(page);
@@ -77,53 +80,73 @@ async function login() {}
 
       await page.type(PASSWORD_INPUT_SELECTOR, password);
 
-      await pageProcessor.clickSelector(LOGIN_BUTTON_SELECTOR);
+      await page.click(LOGIN_BUTTON_SELECTOR);
     },
     TIMES_TO_RETRY,
     WAIT_BEFORE_RETRY_AGAIN,
   );
 
   // remove the 'Complete your profile'
-  await pageProcessor.retry(
-    async () => {
-      await page.waitForSelector(COMPLETE_PROFILE_MODAL_SELECTOR);
-
-      await pageProcessor.clickSelector(COMPLETE_PROFILE_MODAL_EXIT_BUTTON_SELECTOR);
-    },
-    TIMES_TO_RETRY,
-    WAIT_BEFORE_RETRY_AGAIN,
-  );
-
-  // search some jobs
-  await pageProcessor.retry(
-    async () => {
-      await page.waitForSelector(SEARCHBAR_INPUT_SELECTOR);
-
-      await page.type(SEARCHBAR_INPUT_SELECTOR, SEARCH_QUERY);
-    },
-    TIMES_TO_RETRY,
-    WAIT_BEFORE_RETRY_AGAIN,
-  );
-
-  // // scroll to bottom
   // await pageProcessor.retry(
   //   async () => {
-  //     await page.keyboard.press('End');
+  //     await page.waitForSelector(COMPLETE_PROFILE_MODAL_SELECTOR);
+
+  //     await page.click(COMPLETE_PROFILE_MODAL_EXIT_BUTTON_SELECTOR);
   //   },
   //   TIMES_TO_RETRY,
   //   WAIT_BEFORE_RETRY_AGAIN,
   // );
 
+  // search some jobs
+  await pageProcessor.retry(
+    async () => {
+      await page.waitForSelector(CLICK_TO_SEARCH_BUTTON);
+      await page.click(CLICK_TO_SEARCH_BUTTON);
+
+      await page.waitForSelector(SEARCHBAR_INPUT_SELECTOR);
+      await page.type(SEARCHBAR_INPUT_SELECTOR, SEARCH_QUERY);
+
+      // await page.click(SEARCHBAR_BUTTON_SELECTOR);
+
+      await page.keyboard.press('Enter');
+    },
+    TIMES_TO_RETRY,
+    WAIT_BEFORE_RETRY_AGAIN,
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  // scroll to bottom
+  await pageProcessor.retry(
+    async () => {
+      await page.keyboard.press('End');
+    },
+    TIMES_TO_RETRY,
+    WAIT_BEFORE_RETRY_AGAIN,
+  );
+
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
+
   // make it 50 jobs per page
   // await pageProcessor.retry(
+  // async () => {
+  // await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR);
+
+  // await page.click(JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR);
+
+  // await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
+
+  // await page.click(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
+  // },
+  // TIMES_TO_RETRY,
+  // WAIT_BEFORE_RETRY_AGAIN,
+  // );
+
+  // await pageProcessor.retry(
   //   async () => {
-  //     await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR);
-
-  //     await page.clickSelector(JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR);
-
   //     await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
 
-  //     await page.clickSelector(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
+  //     await page.click(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
   //   },
   //   TIMES_TO_RETRY,
   //   WAIT_BEFORE_RETRY_AGAIN,
@@ -156,6 +179,6 @@ async function login() {}
   }
 
   */
+}
 
-  // console.log('🚀  event.body:', event.body);
-})();
+main().catch(console.error);

@@ -29,6 +29,16 @@ async function launchBrowser() {
   return browser;
 }
 export const findJobsHandler = async (event, context) => {
+  function siteConfig() {
+    // if (even.site === upwork) {
+    // set selectors
+    // set urls
+    // set everything based on the site
+    // set query param based on the even (this function will work based on single at a time query param)
+    // {config: {site: 'upwork', queryparams: {country: us, resultePerPgae: 50, etc ...}}}
+    // }
+  }
+
   const browser = await launchBrowser();
 
   // const browser = await puppeteer.launch({
