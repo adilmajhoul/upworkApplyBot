@@ -1,4 +1,4 @@
-// import * as cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 // import * as fs from 'fs';
 // import { promisify } from 'util';
 // import readline from 'readline';
@@ -6,6 +6,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import chromium from '@sparticuz/chromium';
 import url from 'url';
+import moment from 'moment';
 
 puppeteer.use(StealthPlugin());
 
@@ -97,12 +98,12 @@ class PageProcessor {
     return bodyHtml;
   }
 
-  async getElementHtmlBySelector2(selector) {
+  async getElementHtmlBySelector(selector) {
     const element = await this.page.$(selector);
     return element;
   }
 
-  async getElementHtmlBySelector(selector) {
+  async getElementHtmlBySelector_(selector) {
     const element = await this.page.evaluate((selector) => document.querySelector(selector).innerHTML, selector);
     return element;
   }
@@ -117,12 +118,12 @@ class PageProcessor {
   }
 
   async processAllMatchingSelector(selector, html, processEachElementCallback) {
-    const $ = createCheerioObject(html);
+    const $ = this.createCheerioObject(html);
     const elementsArray = $(selector).toArray();
 
-    elementsArray.forEach((element) => {
-      processEachElementCallback(element);
-    });
+    $(selector)
+      .toArray()
+      .forEach((element) => processEachElementCallback($(element)));
   }
 
   async getAllMatchingSelector(selector, html) {
@@ -360,5 +361,39 @@ class JobFilters {
     });
   }
 }
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getUnixTimestamp(timeString) {
+  const timeUnits = {
+    minute: 60 * 1000,
+    hour: 60 * 60 * 1000,
+    day: 24 * 60 * 60 * 1000,
+  };
+
+  const [amount, unit, ago] = timeString.split(' ');
+
+  const amountNum = parseInt(amount, 10);
+
+  const unitWithoutPluralS = timeUnits[unit] ? unit : unit.slice(0, -1);
+  let timeInPosixFormat = amountNum * timeUnits[unitWithoutPluralS];
+
+  const timeInMinutes = Math.floor((Date.now() - timeInPosixFormat) / 60 / 1000);
+
+  console.log(timeString, ':');
+
+  return timeInMinutes;
+}
+
+(async () => {
+  console.log(Math.floor(Date.now() / 60 / 1000 - getUnixTimestamp('5 minutes')));
+  console.log(Math.floor(Date.now() / 60 / 1000 - getUnixTimestamp('16 minutes')));
+  console.log(Math.floor(Date.now() / 60 / 1000 - getUnixTimestamp('2 hours')));
+  console.log(Math.floor(Date.now() / 60 / 1000 - getUnixTimestamp('1 hour')));
+  console.log(Math.floor(Date.now() / 60 / 1000 - getUnixTimestamp('1 day')));
+  console.log(Math.floor(Date.now() / 60 / 1000 - getUnixTimestamp('5 days')));
+})();
 
 export { PageProcessor, launchBrowserTest, launchBrowser, JobFilters };

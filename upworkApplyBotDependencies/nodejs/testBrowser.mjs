@@ -30,8 +30,13 @@ const JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR =
   '#main > div.container > div:nth-child(4) > div > div.air3-grid-container.jobs-grid-container > div.span-12.span-lg-9 > div.air3-card-section.d-lg-flex.justify-space-between > div.d-none.d-lg-block > div > div > div > span';
 const JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR = '#dropdown-menu > li:nth-child(3) > span > span';
 
+const JOBS_SECTION_SELECTOR = 'section.card-list-container';
+const SINGLE_JOB_CARD_SELECTOR = 'article';
+
 const TIMES_TO_RETRY = 1000;
 const WAIT_BEFORE_RETRY_AGAIN = 10;
+const BASE_URL = 'https://www.upwork.com';
+const JOB_LINK_SELECTOR = 'a.up-n-link';
 
 puppeteer.use(StealthPlugin());
 
@@ -69,39 +74,52 @@ async function main() {
     WAIT_BEFORE_RETRY_AGAIN,
   );
 
+  // -------------get links now-------------------
+
+  // get section html
+  console.time('getElementHtmlBySelector');
+  // const sectionHtml = await pageProcessor.getElementHtmlBySelector(JOBS_SECTION_SELECTOR);
+  console.timeEnd('getElementHtmlBySelector');
+
+  const sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
+
+  let link;
+  async function processJobs(element) {
+    link = element.find(JOB_LINK_SELECTOR).attr('href');
+
+    const fakeDB = [
+      '/jobs/Python-script-running_~0117fb2e49d9e87ce7/?referrer_url_path=/nx/search/jobs/',
+      '/jobs/Build-Email-List-for-Sales-Outreach-Specific-Orgs-Using-WordPress-CMS_~010c3b6e5b1109cefe/?referrer_url_path=/nx/search/jobs/',
+      '/jobs/Find-the-marketing-teams-email-for-companies-span-class-highlight-website-span_~01cd600db2c8e77817/?referrer_url_path=/nx/search/jobs/',
+    ];
+    // check if offer is about scraping
+    // check if offer in db
+    if (fakeDB.includes(link)) {
+      return;
+    }
+    // check if offer in last 48 hour
+    // check amount of proposal limit
+    // send hob through sqs queue
+    console.log(link);
+  }
+  await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, printAllText);
+
+  await page.goto(BASE_URL + link, {
+    waitUntil: 'load',
+  });
+
   await new Promise((resolve) => setTimeout(resolve, 20000));
 
-  // go to products search page
-
-  // remove the 'Complete your profile'
-  // await pageProcessor.retry(
-  //   async () => {
-  //     await page.waitForSelector(COMPLETE_PROFILE_MODAL_SELECTOR);
-
-  //     await page.click(COMPLETE_PROFILE_MODAL_EXIT_BUTTON_SELECTOR);
-  //   },
-  //   TIMES_TO_RETRY,
-  //   WAIT_BEFORE_RETRY_AGAIN,
-  // );
-
-  // search some jobs
-  await pageProcessor.retry(
-    async () => {
-      await page.waitForSelector(CLICK_TO_SEARCH_BUTTON);
-      await page.click(CLICK_TO_SEARCH_BUTTON);
-
-      await page.waitForSelector(SEARCHBAR_INPUT_SELECTOR);
-      await page.type(SEARCHBAR_INPUT_SELECTOR, SEARCH_QUERY);
-
-      // await page.click(SEARCHBAR_BUTTON_SELECTOR);
-
-      await page.keyboard.press('Enter');
-    },
-    TIMES_TO_RETRY,
-    WAIT_BEFORE_RETRY_AGAIN,
-  );
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  // loop through pagination
+  while (false) {
+    // loop each page links
+    while (false) {
+      // check if offer is about scraping
+      // check if offer in db
+      // check if offer in last 48 hour
+      // send hob through sqs queue
+    }
+  }
 
   // scroll to bottom
   await pageProcessor.retry(
@@ -112,43 +130,10 @@ async function main() {
     WAIT_BEFORE_RETRY_AGAIN,
   );
 
-  // await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  // make it 50 jobs per page
-  // await pageProcessor.retry(
-  // async () => {
-  // await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR);
-
-  // await page.click(JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR);
-
-  // await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
-
-  // await page.click(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
-  // },
-  // TIMES_TO_RETRY,
-  // WAIT_BEFORE_RETRY_AGAIN,
-  // );
-
-  // await pageProcessor.retry(
-  //   async () => {
-  //     await page.waitForSelector(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
-
-  //     await page.click(JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR);
-  //   },
-  //   TIMES_TO_RETRY,
-  //   WAIT_BEFORE_RETRY_AGAIN,
-  // );
-
   const pageTitle = await page.title();
-  console.log('🚀 ~ pageTitle:', pageTitle);
+  console.error('🚀 ~ pageTitle:', pageTitle);
 
-  // await browser.close();
-
-  // got to upwork
-  // login
-  // got to jobs search
-
-  // search for variable
+  await browser.close();
 
   /* if (job not in database){
 

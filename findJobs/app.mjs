@@ -16,6 +16,8 @@ const STATE_DROP_DOWN_SELECTOR = '#state';
 const WHICH_STATE_TO_SCRAP = 'NJUS';
 const TIMES_TO_RETRY = 1000000;
 
+const JOBS_SECTION_SELECTOR = 'section.card-list-container';
+
 export const findJobsHandler = async (event, context) => {
   //TODO:
   function siteConfig() {
@@ -30,13 +32,6 @@ export const findJobsHandler = async (event, context) => {
 
   const browser = await util.launchBrowser();
 
-  // const browser = await puppeteer.launch({
-  //   args: chromium.args,
-  //   defaultViewport: chromium.defaultViewport,
-  //   executablePath: await chromium.executablePath(),
-  //   headless: chromium.headless,
-  // });
-
   const page = await browser.newPage();
   await page.goto('https://www.upwork.com', {
     waitUntil: 'load',
@@ -45,13 +40,7 @@ export const findJobsHandler = async (event, context) => {
 
   const pageTitle = await page.title();
   console.log('🚀 ~ pageTitle:', pageTitle);
-  await browser.close();
-
-  // got to upwork
-  // login
-  // got to jobs search
-
-  // search for variable
+  // await browser.close();
 
   /* if (job not in database){
 
