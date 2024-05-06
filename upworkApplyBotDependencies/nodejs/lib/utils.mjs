@@ -345,43 +345,6 @@ class JobFilters {
     }
   }
 
-  setExpertiseLevel(queryParam) {
-    return url.format({
-      pathname: this.RESULT_PAGE_BASE_URL,
-      query: { [this.EXPERTISE_LEVEL_QUERYPARAM]: queryParam },
-    });
-  }
-  setJobDuration(queryParam) {
-    return url.format({
-      pathname: this.RESULT_PAGE_BASE_URL,
-      query: { [this.JOB_DURATION_QUERYPARAM]: queryParam },
-    });
-  }
-  setCountry(queryParam) {
-    return url.format({
-      pathname: this.RESULT_PAGE_BASE_URL,
-      query: { [this.LOCATION]: queryParam },
-    });
-  }
-  setJobsPerPage(queryParam) {
-    return url.format({
-      pathname: this.RESULT_PAGE_BASE_URL,
-      query: { [this.JOBS_PER_PAGE]: queryParam },
-    });
-  }
-  setSearchQuery(queryParam) {
-    return url.format({
-      pathname: this.RESULT_PAGE_BASE_URL,
-      query: { [this.SEARCH_QUERY]: queryParam },
-    });
-  }
-  setSortBasedOn(queryParam) {
-    return url.format({
-      pathname: this.RESULT_PAGE_BASE_URL,
-      query: { [this.SORT_JOBS_BASED_ON]: queryParam },
-    });
-  }
-
   buildURL(queryParams) {
     const queriesList = {};
 
@@ -392,23 +355,10 @@ class JobFilters {
     }
 
     return url.format({
-      pathname: this.BASE_URL,
+      pathname: this.RESULT_PAGE_BASE_URL,
       query: queriesList,
     });
   }
 }
-
-const queyParams = {
-  q: 'web scraping',
-  contractor_tier: '',
-  duration_v3: '',
-  location: '',
-  per_page: '',
-  sort: '',
-};
-
-const jobFilters = new JobFilters('upwork');
-const myUrl = jobFilters.buildURL(queyParams);
-console.log('🚀 ~ myUrl:', myUrl);
 
 export { PageProcessor, launchBrowserTest, launchBrowser, JobFilters };
