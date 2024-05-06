@@ -39,23 +39,35 @@ async function main() {
   const browser = await util.launchBrowserTest();
   const page = await browser.newPage();
 
-  const queyParams = {
-    SEARCH_QUERY: '',
-    EXPERTISE_LEVEL_QUERYPARAM: '',
-    JOB_DURATION_QUERYPARAM: '',
-    LOCATION: '',
-    JOBS_PER_PAGE: '',
-    SORT_JOBS_BASED_ON: '',
-  };
-
   const pageProcessor = new util.PageProcessor(page, 'upwork');
 
   await pageProcessor.login();
 
   // build url
+  const queyParams = {
+    nbs: 1,
+    q: 'web scraping',
+    contractor_tier: '1,2',
+    duration_v3: 'week',
+    location: 'United States',
+    per_page: '50',
+    sort: 'recency',
+  };
 
-  const jobFilters = new util.JobFilters();
-  const url = jobFilters.buildURL(queyParams);
+  const jobFilters = new util.JobFilters('upwork');
+  const jobsUrl = jobFilters.buildURL(queyParams);
+
+  await pageProcessor.retry(
+    async () => {
+      await page.goto(jobsUrl, {
+        waitUntil: 'load',
+      });
+    },
+    TIMES_TO_RETRY,
+    WAIT_BEFORE_RETRY_AGAIN,
+  );
+
+  await new Promise((resolve) => setTimeout(resolve, 20000));
 
   // go to products search page
 
