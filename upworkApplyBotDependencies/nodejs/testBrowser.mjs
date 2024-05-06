@@ -43,6 +43,8 @@ async function main() {
 
   await pageProcessor.login();
 
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
   // build url
   const queyParams = {
     nbs: 1,
