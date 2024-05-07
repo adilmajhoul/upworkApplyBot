@@ -32,6 +32,7 @@ const JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR = '#dropdown-menu > li:nth-child
 
 const JOBS_SECTION_SELECTOR = 'section.card-list-container';
 const SINGLE_JOB_CARD_SELECTOR = 'article';
+const JOB_POSTING_TIME_SELECTOR = 'div > small > span:nth-child(2)';
 
 const TIMES_TO_RETRY = 1000;
 const WAIT_BEFORE_RETRY_AGAIN = 10;
@@ -74,18 +75,12 @@ async function main() {
     WAIT_BEFORE_RETRY_AGAIN,
   );
 
-  // -------------get links now-------------------
-
-  // get section html
-  console.time('getElementHtmlBySelector');
-  // const sectionHtml = await pageProcessor.getElementHtmlBySelector(JOBS_SECTION_SELECTOR);
-  console.timeEnd('getElementHtmlBySelector');
-
   const sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
 
   let link;
   async function processJobs(element) {
     link = element.find(JOB_LINK_SELECTOR).attr('href');
+    const postedTime = element.find(JOB_POSTING_TIME_SELECTOR).text();
 
     const fakeDB = [
       '/jobs/Python-script-running_~0117fb2e49d9e87ce7/?referrer_url_path=/nx/search/jobs/',
@@ -94,15 +89,22 @@ async function main() {
     ];
     // check if offer is about scraping
     // check if offer in db
-    if (fakeDB.includes(link)) {
-      return;
+
+    // if (fakeDB.includes(link)) {
+    //   return;
+    // }
+
+    if (60 >= pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(postedTime)) {
+      console.log(postedTime);
+      console.log(link);
+    } else {
+      return 'break';
     }
-    // check if offer in last 48 hour
+
     // check amount of proposal limit
     // send hob through sqs queue
-    console.log(link);
   }
-  await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, printAllText);
+  await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
 
   await page.goto(BASE_URL + link, {
     waitUntil: 'load',
