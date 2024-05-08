@@ -13,6 +13,13 @@ Resources:
       MemorySize: 2048
       Layers:
         - !Ref upworkApplyBotLayer
+      Events:
+        1minute:
+          Type: Schedule
+          Properties:
+            Schedule: rate(2 hours)
+            Description: run job collecting every 2 hours
+            Enabled: true
   # -------------------------------
   submitProposalFunction:
     Type: AWS::Serverless::Function

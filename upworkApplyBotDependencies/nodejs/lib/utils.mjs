@@ -6,7 +6,12 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import chromium from '@sparticuz/chromium';
 import url from 'url';
-import moment from 'moment';
+import AWS from 'aws-sdk';
+AWS.config.update({
+  region: 'us-east-1',
+  accessKeyId: 'AKIAVRUVRGU2ZH32YPPD',
+  secretAccessKey: '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',
+});
 
 puppeteer.use(StealthPlugin());
 
@@ -344,6 +349,13 @@ class PageProcessor {
   getCurrentTimeInMinutes() {
     return Math.floor(Date.now() / 60 / 1000);
   }
+
+  getSubString(string, regex) {
+    // const regex = /~([a-f0-9]{18})\//;
+    const match = string.match(regex);
+
+    return match ? match[1] : 'No match found.';
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -392,4 +404,35 @@ class JobFilters {
   }
 }
 
-export { PageProcessor, launchBrowserTest, launchBrowser, JobFilters };
+class Dynamo {
+  constructor() {
+    this.dynamodb = new AWS.DynamoDB();
+    this.docClient = new AWS.DynamoDB.DocumentClient();
+
+    this.pageProcessor = new PageProcessor();
+  }
+
+  async insertItem(link, TableName) {
+    const jobId = this.pageProcessor.getSubString(link, /~([a-f0-9]{18})\//);
+    console.log('🚀 jobId:', jobId);
+
+    const params = {
+      TableName,
+      Item: {
+        jobId,
+        link,
+      },
+    };
+
+    try {
+      const result = await this.docClient.put(params).promise();
+      console.log(`Successfully inserted item with id ${jobId}`);
+      return result;
+    } catch (error) {
+      console.error(`Error inserting item: ${error.message}`);
+      return error.message;
+    }
+  }
+}
+
+export { PageProcessor, launchBrowserTest, launchBrowser, JobFilters, Dynamo };

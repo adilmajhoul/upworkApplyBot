@@ -94,6 +94,8 @@ async function main() {
     //   return;
     // }
 
+    // skip if it requires tokens
+
     if (60 >= pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(postedTime)) {
       console.log(postedTime);
       console.log(link);
