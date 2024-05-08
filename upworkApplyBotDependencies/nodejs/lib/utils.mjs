@@ -6,19 +6,22 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import chromium from '@sparticuz/chromium';
 import url from 'url';
-import AWS from 'aws-sdk';
-AWS.config.update({
-  region: 'us-east-1',
-  accessKeyId: 'AKIAVRUVRGU2ZH32YPPD',
-  secretAccessKey: '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',
-});
+
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+
+// AWS.config.update({
+//   region: 'us-east-1',
+//   accessKeyId: 'AKIAVRUVRGU2ZH32YPPD',
+//   secretAccessKey: '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',
+// });
 
 puppeteer.use(StealthPlugin());
 
 // promisify callback functions
 // const readFileAsync = promisify(fs.readFile);
 
-async function launchBrowserTest() {
+async function launchBrowser_local() {
   const browser = await puppeteer.launch({
     headless: false,
     executablePath: '/usr/bin/google-chrome-stable',
@@ -126,10 +129,15 @@ class PageProcessor {
     const $ = this.createCheerioObject(html);
     const elementsArray = $(selector).toArray();
 
+    const arrayLength = elementsArray.length;
+    let iteration = 1;
+
     for (const el of elementsArray) {
-      const statues = processEachElementCallback($(el));
+      const statues = processEachElementCallback($(el), arrayLength, iteration);
 
       if (statues === 'break') break;
+
+      iteration++;
     }
 
     // $(selector)
@@ -406,13 +414,14 @@ class JobFilters {
 
 class Dynamo {
   constructor() {
-    this.dynamodb = new AWS.DynamoDB();
-    this.docClient = new AWS.DynamoDB.DocumentClient();
+    this.client = new DynamoDBClient({});
+    this.docClient = DynamoDBDocumentClient.from(this.client);
 
     this.pageProcessor = new PageProcessor();
   }
 
   async insertItem(link, TableName) {
+    // const jobId = link.split('?')[0];
     const jobId = this.pageProcessor.getSubString(link, /~([a-f0-9]{18})\//);
     console.log('🚀 jobId:', jobId);
 
@@ -425,7 +434,7 @@ class Dynamo {
     };
 
     try {
-      const result = await this.docClient.put(params).promise();
+      const result = await this.docClient.send(new PutCommand(params));
       console.log(`Successfully inserted item with id ${jobId}`);
       return result;
     } catch (error) {
@@ -435,4 +444,30 @@ class Dynamo {
   }
 }
 
-export { PageProcessor, launchBrowserTest, launchBrowser, JobFilters, Dynamo };
+export function convertTimeAgoToValideDate(timeString) {
+  if (!timeString || !timeString.includes('ago')) return 0;
+
+  const timeUnits = {
+    minute: 60 * 1000,
+    hour: 60 * 60 * 1000,
+    day: 24 * 60 * 60 * 1000,
+  };
+
+  const [amount, unit, ago] = timeString.split(' ');
+
+  const amountNum = parseInt(amount, 10);
+
+  const unitWithoutPluralS = timeUnits[unit] ? unit : unit.slice(0, -1);
+  let timeInPosixFormat = amountNum * timeUnits[unitWithoutPluralS];
+
+  const timeInMinutes = Math.floor((Date.now() - timeInPosixFormat) / 60 / 1000);
+
+  return timeInMinutes;
+}
+export function getCurrentTimeInMinutes() {
+  return Math.floor(Date.now() / 60 / 1000);
+}
+
+// console.log(getCurrentTimeInMinutes() - convertTimeAgoToValideDate(' 31 minutes ago'.trim()));
+
+export { PageProcessor, launchBrowser_local, launchBrowser, JobFilters, Dynamo };

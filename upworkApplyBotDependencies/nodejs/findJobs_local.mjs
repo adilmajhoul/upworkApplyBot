@@ -42,51 +42,73 @@ const JOB_LINK_SELECTOR = 'a.up-n-link';
 puppeteer.use(StealthPlugin());
 
 async function main() {
+  //TODO:
+  function siteConfig() {
+    // if (even.site === upwork) {
+    // set selectors
+    // set urls
+    // set everything based on the site
+    // set query param based on the even (this function will work based on single at a time query param)
+    // {config: {site: 'upwork', queryparams: {country: us, resultePerPgae: 50, etc ...}}}
+    // }
+  }
+
   const browser = await util.launchBrowser_local();
   const page = await browser.newPage();
 
   const pageProcessor = new util.PageProcessor(page, 'upwork');
+  const dynamo = new util.Dynamo();
 
   await pageProcessor.login();
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  // ------- check if you are actually logged in using ui clues or browser storage !! -----------
 
-  // build url
-  const queyParams = {
-    nbs: 1,
-    q: 'web scraping',
-    contractor_tier: '1,2',
-    duration_v3: 'week',
-    location: 'United States',
-    per_page: '50',
-    sort: 'recency',
-  };
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  const jobFilters = new util.JobFilters('upwork');
-  const jobsUrl = jobFilters.buildURL(queyParams);
+  async function goToJobsListings(pageNumber) {
+    // https://www.upwork.com/nx/search/jobs/?nbs=1&per_page=50&q=web%20scraping&sort=recency
+    const queyParams = {
+      nbs: 1,
+      q: 'web scraping',
+      duration_v3: 'week',
+      per_page: '50',
+      sort: 'recency',
+    };
 
-  await pageProcessor.retry(
-    async () => {
-      await page.goto(jobsUrl, {
-        waitUntil: 'load',
-      });
-    },
-    TIMES_TO_RETRY,
-    WAIT_BEFORE_RETRY_AGAIN,
-  );
+    pageNumber ? (queyParams['page'] = pageNumber) : '';
 
-  const sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
+    const jobFilters = new util.JobFilters('upwork');
+    const jobsUrl = jobFilters.buildURL(queyParams);
+
+    console.log('🚀 ~ jobsUrl:', jobsUrl);
+
+    await pageProcessor.retry(
+      async () => {
+        await page.goto(jobsUrl, {
+          waitUntil: 'load',
+        });
+      },
+      TIMES_TO_RETRY,
+      WAIT_BEFORE_RETRY_AGAIN,
+    );
+  }
+
+  await goToJobsListings();
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
   let link;
-  async function processJobs(element) {
+  let currentPageNumber = 2;
+  async function processJobs(element, arrayLength, iteration) {
     link = element.find(JOB_LINK_SELECTOR).attr('href');
-    const postedTime = element.find(JOB_POSTING_TIME_SELECTOR).text();
+    const jobTitle = element.find(JOB_LINK_SELECTOR).text();
+    const rawPostingTime = element.find(JOB_POSTING_TIME_SELECTOR).text().trim();
 
-    const fakeDB = [
-      '/jobs/Python-script-running_~0117fb2e49d9e87ce7/?referrer_url_path=/nx/search/jobs/',
-      '/jobs/Build-Email-List-for-Sales-Outreach-Specific-Orgs-Using-WordPress-CMS_~010c3b6e5b1109cefe/?referrer_url_path=/nx/search/jobs/',
-      '/jobs/Find-the-marketing-teams-email-for-companies-span-class-highlight-website-span_~01cd600db2c8e77817/?referrer_url_path=/nx/search/jobs/',
-    ];
+    // const numericPostingTime =
+    // pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(rawPostingTime);
+
+    const numericPostingTime = util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime);
+
+    const postingTimeFilter = 480;
     // check if offer is about scraping
     // check if offer in db
 
@@ -94,49 +116,42 @@ async function main() {
     //   return;
     // }
 
-    // skip if it requires tokens
+    console.log({
+      jobTitle,
+      rawPostingTime,
+      numericPostingTime,
+      postingTimeFilter,
+      rawPostingTime,
+      link: 'upwork.com' + link,
+    });
+    480;
+    // if (numericPostingTime <= postingTimeFilter) {
+    //   // console.log({ jobTitle, rawPostingTime, link });
 
-    if (60 >= pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(postedTime)) {
-      console.log(postedTime);
-      console.log(link);
-    } else {
-      return 'break';
-    }
+    //   const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
+    //   console.log('🚀 dynamoStatues:', dynamoStatues);
+    // } else {
+    //   return 'break';
+    // }
 
     // check amount of proposal limit
     // send hob through sqs queue
-  }
-  await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
 
-  await page.goto(BASE_URL + link, {
-    waitUntil: 'load',
-  });
+    if (iteration === arrayLength && numericPostingTime <= postingTimeFilter) {
+      await goToJobsListings(currentPageNumber);
 
-  await new Promise((resolve) => setTimeout(resolve, 20000));
-
-  // loop through pagination
-  while (false) {
-    // loop each page links
-    while (false) {
-      // check if offer is about scraping
-      // check if offer in db
-      // check if offer in last 48 hour
-      // send hob through sqs queue
+      currentPageNumber++;
     }
   }
 
-  // scroll to bottom
-  await pageProcessor.retry(
-    async () => {
-      await page.keyboard.press('End');
-    },
-    TIMES_TO_RETRY,
-    WAIT_BEFORE_RETRY_AGAIN,
-  );
+  let sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
+  await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
 
+  await new Promise((resolve) => setTimeout(resolve, 20000));
+
+  // -----------------------------------------------------------------------------
   const pageTitle = await page.title();
-  console.error('🚀 ~ pageTitle:', pageTitle);
-
+  console.log('🚀 ~ pageTitle:', pageTitle);
   await browser.close();
 
   /* if (job not in database){

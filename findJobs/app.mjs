@@ -67,37 +67,45 @@ export const findJobsHandler = async (event, context) => {
 
   // ------- check if you are actually logged in using ui clues or browser storage !! -----------
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  const queyParams = {
-    nbs: 1,
-    q: 'web scraping',
-    contractor_tier: '1,2',
-    duration_v3: 'week',
-    location: 'United States',
-    per_page: '50',
-    sort: 'recency',
-  };
+  async function goToJobsListings(page = 1) {
+    const queyParams = {
+      nbs: 1,
+      q: 'web scraping',
+      contractor_tier: '1,2',
+      duration_v3: 'week',
+      location: 'United States',
+      per_page: '50',
+      sort: 'recency',
+      page,
+    };
 
-  const jobFilters = new util.JobFilters('upwork');
-  const jobsUrl = jobFilters.buildURL(queyParams);
+    const jobFilters = new util.JobFilters('upwork');
+    const jobsUrl = jobFilters.buildURL(queyParams);
 
-  await pageProcessor.retry(
-    async () => {
-      await page.goto(jobsUrl, {
-        waitUntil: 'load',
-      });
-    },
-    TIMES_TO_RETRY,
-    WAIT_BEFORE_RETRY_AGAIN,
-  );
-  const sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
+    await pageProcessor.retry(
+      async () => {
+        await page.goto(jobsUrl, {
+          waitUntil: 'load',
+        });
+      },
+      TIMES_TO_RETRY,
+      WAIT_BEFORE_RETRY_AGAIN,
+    );
+  }
+
+  await goToJobsListings(1);
 
   let link;
-  async function processJobs(element) {
+  let currentPageNumber = 1;
+  async function processJobs(element, arrayLength, iteration) {
     link = element.find(JOB_LINK_SELECTOR).attr('href');
     const postedTime = element.find(JOB_POSTING_TIME_SELECTOR).text();
 
+    const currentElementPostingTime =
+      pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(postedTime);
+    const postingTimeFilter = 720;
     // check if offer is about scraping
     // check if offer in db
 
@@ -105,7 +113,7 @@ export const findJobsHandler = async (event, context) => {
     //   return;
     // }
 
-    if (240 >= pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(postedTime)) {
+    if (currentElementPostingTime <= postingTimeFilter) {
       console.log(postedTime);
       console.log(link);
 
@@ -117,7 +125,15 @@ export const findJobsHandler = async (event, context) => {
 
     // check amount of proposal limit
     // send hob through sqs queue
+
+    if (iteration === arrayLength && currentElementPostingTime <= postingTimeFilter) {
+      currentPageNumber++;
+
+      await goToJobsListings(currentPageNumber);
+    }
   }
+
+  let sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
   await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
 
   // -----------------------------------------------------------------------------
@@ -141,8 +157,6 @@ export const findJobsHandler = async (event, context) => {
   }
 
   */
-
-  // console.log('🚀  event.body:', event.body);
 
   const response = {
     statusCode: 200,
