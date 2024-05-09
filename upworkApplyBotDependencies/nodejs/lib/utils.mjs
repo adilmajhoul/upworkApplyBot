@@ -40,7 +40,6 @@ async function launchBrowser() {
 
   return browser;
 }
-// --------------------------------------------------------------------------------
 function getConfig(site) {
   const upwork = {
     email: 'adil33zayn@gmail.com',
@@ -78,7 +77,6 @@ function getConfig(site) {
       break;
   }
 }
-// --------------------------------------------------------------------------------
 class PageProcessor {
   constructor(page, site) {
     this.page = page;
@@ -139,10 +137,6 @@ class PageProcessor {
 
       iteration++;
     }
-
-    // $(selector)
-    //   .toArray()
-    //   .forEach((element) => processEachElementCallback($(element)));
   }
 
   async getAllMatchingSelector(selector, html) {
