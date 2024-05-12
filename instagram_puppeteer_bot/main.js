@@ -6,7 +6,7 @@ async function main() {
   await instagramBot.init();
   await instagramBot.signin({
     username: process.env.username,
-    password: process.env.password,
+    // password: process.env.password,
   });
 }
 
