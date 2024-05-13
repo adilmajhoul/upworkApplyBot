@@ -4,9 +4,10 @@
     "width": 1300,
     "height": 760
   },
+
   "selectors": {
-    "home_to_login_button": ".izU2O a",
-    "username_field": "input[type=\"text\"]",
+    "home_to_login_button": "span.x1lliihq",
+    "username_field": "input[name=\"username\"]",
     "password_field": "input[type=\"password\"]",
     "login_button": "button[type=\"submit\"]",
     "post_heart_pink": "span.glyphsSpriteHeart__filled__24__red_5",

@@ -4,10 +4,12 @@ async function main() {
   const instagramBot = new InstagramBot();
 
   await instagramBot.init();
-  await instagramBot.signin({
-    username: process.env.username,
-    // password: process.env.password,
+  const isLogged = await instagramBot.signin({
+    username: 'adilmajhoul',
+    password: 'instagramskhon1-',
   });
+
+  console.log('🚀 isLogged:', isLogged);
 }
 
 main().then(console.error);

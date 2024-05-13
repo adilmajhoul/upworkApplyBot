@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 class InstagramBot {
   constructor() {
-    this.config = require("./config/config.json");
+    this.config = require('./config/config.json');
   }
 
   randomInteger(min, max) {
@@ -11,14 +11,14 @@ class InstagramBot {
   }
 
   async init() {
-    const puppeteer = require("puppeteer");
-    const fs = require("fs");
+    const puppeteer = require('puppeteer');
+    const fs = require('fs');
 
-    const preloadFile = fs.readFileSync("./config/preload.js", "utf8");
+    const preloadFile = fs.readFileSync('./config/preload.js', 'utf8');
 
     let args = this.config.args;
     if (this.config.proxyServer) {
-      args.push("--proxy-server=" + this.config.proxyServer);
+      args.push('--proxy-server=' + this.config.proxyServer);
     }
 
     this.browser = await puppeteer.launch({
@@ -26,6 +26,7 @@ class InstagramBot {
       args: args,
       ignoreHTTPSErrors: true,
       userDataDir: this.config.userDataDir,
+      executablePath: '/usr/bin/google-chrome-stable',
     });
 
     this.page = await this.browser.newPage();
@@ -48,53 +49,53 @@ class InstagramBot {
   }
 
   async signin(credentials) {
-    if (
-      !credentials ||
-      typeof credentials.username === undefined ||
-      typeof credentials.password === undefined
-    ) {
-      throw new Error("Username or password was not passed");
+    if (!credentials || typeof credentials.username === undefined || typeof credentials.password === undefined) {
+      throw new Error('Username or password was not passed');
     }
 
     await this.page.goto(this.config.base_url, {
       timeout: 60000,
-      waitUntil: "networkidle0",
+      waitUntil: 'networkidle0',
     });
-    await this.page.waitFor(this.randomInteger(1000, 3000));
+    // await this.page.waitFor(this.randomInteger(1000, 3000));
 
     try {
-      await this.page.click(this.config.selectors.home_to_login_button);
+      await this.page.click(this.config.selectors.username_field);
     } catch (e) {
       return true; //already logged in
     }
 
-    await this.page.waitFor(this.randomInteger(500, 1000));
+    // await this.page.waitFor(this.randomInteger(500, 1000));
+
     await Promise.all([
       this.page.waitForSelector(this.config.selectors.username_field),
       this.page.waitForSelector(this.config.selectors.password_field),
     ]);
 
-    await this.page.click(this.config.selectors.username_field);
+    await this.page.type(this.config.selectors.username_field, credentials.username);
     await this.page.waitFor(this.randomInteger(100, 300));
-    await this.page.keyboard.type(credentials.username);
-    await this.page.waitFor(this.randomInteger(100, 300));
-    await this.page.click(this.config.selectors.password_field);
-    await this.page.waitFor(this.randomInteger(100, 300));
-    await this.page.keyboard.type(credentials.password);
+    await this.page.type(this.config.selectors.password_field, credentials.password);
     await this.page.waitFor(this.randomInteger(500, 1000));
-    await this.page.keyboard.press("Enter");
-    await this.page.waitFor(this.randomInteger(100, 300));
+
+    // await this.page.click(this.config.selectors.username_field);
+    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await this.page.keyboard.type(credentials.username);
+    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await this.page.click(this.config.selectors.password_field);
+    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await this.page.keyboard.type(credentials.password);
+    // await this.page.waitFor(this.randomInteger(500, 1000));
+    await this.page.keyboard.press('Enter');
+    // await this.page.waitFor(this.randomInteger(100, 300));
 
     try {
       await this.page.waitForNavigation({ timeout: 15000 });
     } catch (e) {
       //we'll see incorrect login / account banned message here without page reload, so throw error here
-      throw new Error("Incorrect login credentials!");
+      throw new Error('Incorrect login credentials!');
     }
 
-    let unusualLogin = await this.page.$(
-      this.config.selectors.unusual_login_button
-    );
+    let unusualLogin = await this.page.$(this.config.selectors.unusual_login_button);
 
     if (unusualLogin !== null) {
       //if got 'unusual login' message - waiting for manual email/SMS confirmation before doing next steps
@@ -114,7 +115,7 @@ class InstagramBot {
   async visitProfile(profileName) {
     await this.page.goto(`${this.config.base_url}/${profileName}/`, {
       timeout: 60000,
-      waitUntil: "networkidle0",
+      waitUntil: 'networkidle0',
     });
     await this.page.waitFor(this.randomInteger(300, 500));
 
@@ -128,11 +129,11 @@ class InstagramBot {
 
   async like(mediaId) {
     if (!(await this.isLoggedIn())) {
-      throw new Error("Please log in first!");
+      throw new Error('Please log in first!');
     }
     await this.page.goto(`${this.config.base_url}/p/${mediaId}/`, {
       timeout: 60000,
-      waitUntil: "networkidle0",
+      waitUntil: 'networkidle0',
     });
     await this.page.waitFor(this.randomInteger(500, 1000));
 
@@ -147,9 +148,7 @@ class InstagramBot {
       await this.page.click(this.config.selectors.post_like_button);
       await this.page.waitFor(this.randomInteger(200, 300));
 
-      let postIsLikedNow = await this.page.$(
-        this.config.selectors.post_heart_pink
-      );
+      let postIsLikedNow = await this.page.$(this.config.selectors.post_heart_pink);
       if (postIsLikedNow === null) {
         throw new Error(`Error while trying to like post ${mediaId}`);
       }
@@ -162,12 +161,12 @@ class InstagramBot {
 
   async unlike(mediaId) {
     if (!(await this.isLoggedIn())) {
-      throw new Error("Please log in first!");
+      throw new Error('Please log in first!');
     }
 
     await this.page.goto(`${this.config.base_url}/p/${mediaId}/`, {
       timeout: 60000,
-      waitUntil: "networkidle0",
+      waitUntil: 'networkidle0',
     });
     await this.page.waitFor(this.randomInteger(500, 1000));
 
@@ -182,9 +181,7 @@ class InstagramBot {
       await this.page.click(this.config.selectors.post_like_button);
       await this.page.waitFor(this.randomInteger(200, 300));
 
-      let postIsLikedNow = await this.page.$(
-        this.config.selectors.post_heart_pink
-      );
+      let postIsLikedNow = await this.page.$(this.config.selectors.post_heart_pink);
       if (postIsLikedNow !== null) {
         throw new Error(`Error while trying to unlike post ${mediaId}`);
       }
@@ -197,25 +194,20 @@ class InstagramBot {
 
   async follow(profileName) {
     if (!(await this.isLoggedIn())) {
-      throw new Error("Please log in first!");
+      throw new Error('Please log in first!');
     }
 
     await this.visitProfile(profileName);
     await this.page.waitFor(this.randomInteger(500, 1000));
 
-    let isNotFollowingYet = await this.page.$(
-      this.config.selectors.user_follow_button
-    );
+    let isNotFollowingYet = await this.page.$(this.config.selectors.user_follow_button);
 
     if (isNotFollowingYet) {
       await this.page.click(this.config.selectors.user_follow_button);
       await this.page.waitFor(this.randomInteger(1000, 1100));
 
       try {
-        await this.page.waitForSelector(
-          this.config.selectors.user_unfollow_button,
-          { timeout: 1500 }
-        );
+        await this.page.waitForSelector(this.config.selectors.user_unfollow_button, { timeout: 1500 });
       } catch (e) {
         throw new Error(`Error while trying to follow profile ${profileName}`);
       }
@@ -228,34 +220,25 @@ class InstagramBot {
 
   async unfollow(profileName) {
     if (!(await this.isLoggedIn())) {
-      throw new Error("Please log in first!");
+      throw new Error('Please log in first!');
     }
 
     await this.visitProfile(profileName);
     await this.page.waitFor(this.randomInteger(500, 1000));
 
-    let isFollowingAlready = await this.page.$(
-      this.config.selectors.user_unfollow_button
-    );
+    let isFollowingAlready = await this.page.$(this.config.selectors.user_unfollow_button);
 
     if (isFollowingAlready) {
       await this.page.click(this.config.selectors.user_unfollow_button);
-      await this.page.waitForSelector(
-        this.config.selectors.user_unfollow_confirm_button
-      );
+      await this.page.waitForSelector(this.config.selectors.user_unfollow_confirm_button);
       await this.page.waitFor(this.randomInteger(500, 1000));
       await this.page.click(this.config.selectors.user_unfollow_confirm_button);
       await this.page.waitFor(this.randomInteger(200, 300));
 
       try {
-        await this.page.waitForSelector(
-          this.config.selectors.user_follow_button,
-          { timeout: 1500 }
-        );
+        await this.page.waitForSelector(this.config.selectors.user_follow_button, { timeout: 1500 });
       } catch (e) {
-        throw new Error(
-          `Error while trying to unfollow profile ${profileName}`
-        );
+        throw new Error(`Error while trying to unfollow profile ${profileName}`);
       }
     } else {
       throw new Error(`We do not follow profile ${profileName}`);
