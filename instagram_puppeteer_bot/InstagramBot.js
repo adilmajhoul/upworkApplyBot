@@ -1,5 +1,7 @@
 'use strict';
 
+const { setTimeout } = require('timers/promises');
+
 class InstagramBot {
   constructor() {
     this.config = require('./config/config.json');
@@ -57,7 +59,7 @@ class InstagramBot {
       timeout: 60000,
       waitUntil: 'networkidle0',
     });
-    // await this.page.waitFor(this.randomInteger(1000, 3000));
+    // await setTimeout(this.randomInteger(1000, 3000));
 
     try {
       await this.page.click(this.config.selectors.username_field);
@@ -65,7 +67,7 @@ class InstagramBot {
       return true; //already logged in
     }
 
-    // await this.page.waitFor(this.randomInteger(500, 1000));
+    // await setTimeout(this.randomInteger(500, 1000));
 
     await Promise.all([
       this.page.waitForSelector(this.config.selectors.username_field),
@@ -73,20 +75,21 @@ class InstagramBot {
     ]);
 
     await this.page.type(this.config.selectors.username_field, credentials.username);
-    await this.page.waitFor(this.randomInteger(100, 300));
+    await setTimeout(this.randomInteger(100, 300));
     await this.page.type(this.config.selectors.password_field, credentials.password);
-    await this.page.waitFor(this.randomInteger(500, 1000));
+    await setTimeout(this.randomInteger(500, 1000));
+    await this.page.keyboard.press('Enter');
 
     // await this.page.click(this.config.selectors.username_field);
-    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await setTimeout(this.randomInteger(100, 300));
     // await this.page.keyboard.type(credentials.username);
-    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await setTimeout(this.randomInteger(100, 300));
     // await this.page.click(this.config.selectors.password_field);
-    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await setTimeout(this.randomInteger(100, 300));
     // await this.page.keyboard.type(credentials.password);
-    // await this.page.waitFor(this.randomInteger(500, 1000));
-    await this.page.keyboard.press('Enter');
-    // await this.page.waitFor(this.randomInteger(100, 300));
+    // await setTimeout(this.randomInteger(500, 1000));
+    // await this.page.keyboard.press('Enter');
+    // await setTimeout(this.randomInteger(100, 300));
 
     try {
       await this.page.waitForNavigation({ timeout: 15000 });
@@ -117,7 +120,7 @@ class InstagramBot {
       timeout: 60000,
       waitUntil: 'networkidle0',
     });
-    await this.page.waitFor(this.randomInteger(300, 500));
+    await setTimeout(this.randomInteger(300, 500));
 
     let error404 = await this.page.$(this.config.selectors.error_404);
     if (error404 !== null) {
@@ -135,7 +138,7 @@ class InstagramBot {
       timeout: 60000,
       waitUntil: 'networkidle0',
     });
-    await this.page.waitFor(this.randomInteger(500, 1000));
+    await setTimeout(this.randomInteger(500, 1000));
 
     let error404 = await this.page.$(this.config.selectors.error_404);
     if (error404 !== null) {
@@ -146,7 +149,7 @@ class InstagramBot {
 
     if (postIsLiked === null) {
       await this.page.click(this.config.selectors.post_like_button);
-      await this.page.waitFor(this.randomInteger(200, 300));
+      await setTimeout(this.randomInteger(200, 300));
 
       let postIsLikedNow = await this.page.$(this.config.selectors.post_heart_pink);
       if (postIsLikedNow === null) {
@@ -168,7 +171,7 @@ class InstagramBot {
       timeout: 60000,
       waitUntil: 'networkidle0',
     });
-    await this.page.waitFor(this.randomInteger(500, 1000));
+    await setTimeout(this.randomInteger(500, 1000));
 
     let error404 = await this.page.$(this.config.selectors.error_404);
     if (error404 !== null) {
@@ -179,7 +182,7 @@ class InstagramBot {
 
     if (postIsLiked !== null) {
       await this.page.click(this.config.selectors.post_like_button);
-      await this.page.waitFor(this.randomInteger(200, 300));
+      await setTimeout(this.randomInteger(200, 300));
 
       let postIsLikedNow = await this.page.$(this.config.selectors.post_heart_pink);
       if (postIsLikedNow !== null) {
@@ -198,13 +201,13 @@ class InstagramBot {
     }
 
     await this.visitProfile(profileName);
-    await this.page.waitFor(this.randomInteger(500, 1000));
+    await setTimeout(this.randomInteger(500, 1000));
 
     let isNotFollowingYet = await this.page.$(this.config.selectors.user_follow_button);
 
     if (isNotFollowingYet) {
       await this.page.click(this.config.selectors.user_follow_button);
-      await this.page.waitFor(this.randomInteger(1000, 1100));
+      await setTimeout(this.randomInteger(1000, 1100));
 
       try {
         await this.page.waitForSelector(this.config.selectors.user_unfollow_button, { timeout: 1500 });
@@ -224,16 +227,16 @@ class InstagramBot {
     }
 
     await this.visitProfile(profileName);
-    await this.page.waitFor(this.randomInteger(500, 1000));
+    await setTimeout(this.randomInteger(500, 1000));
 
     let isFollowingAlready = await this.page.$(this.config.selectors.user_unfollow_button);
 
     if (isFollowingAlready) {
       await this.page.click(this.config.selectors.user_unfollow_button);
       await this.page.waitForSelector(this.config.selectors.user_unfollow_confirm_button);
-      await this.page.waitFor(this.randomInteger(500, 1000));
+      await setTimeout(this.randomInteger(500, 1000));
       await this.page.click(this.config.selectors.user_unfollow_confirm_button);
-      await this.page.waitFor(this.randomInteger(200, 300));
+      await setTimeout(this.randomInteger(200, 300));
 
       try {
         await this.page.waitForSelector(this.config.selectors.user_follow_button, { timeout: 1500 });

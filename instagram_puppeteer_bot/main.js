@@ -8,8 +8,9 @@ async function main() {
     username: 'adilmajhoul',
     password: 'instagramskhon1-',
   });
-
   console.log('🚀 isLogged:', isLogged);
+
+  await instagramBot.visitProfile('aitmalek_m');
 }
 
 main().then(console.error);

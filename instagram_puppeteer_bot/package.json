@@ -6,6 +6,6 @@
   "scripts": {},
   "author": "Soslan Aldatov <me@sptm.dev>",
   "dependencies": {
-    "puppeteer": "^1.18.1"
+    "puppeteer": "^22.8.0"
   }
 }
