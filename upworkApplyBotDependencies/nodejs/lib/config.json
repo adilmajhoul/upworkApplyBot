@@ -1,0 +1,16 @@
+{
+  "accounts": {
+    "account1": {
+      "email": "email",
+      "password": "password"
+    },
+    "account2": {
+      "email": "email",
+      "password": "password"
+    },
+    "account3": {
+      "email": "email",
+      "password": "password"
+    }
+  }
+}

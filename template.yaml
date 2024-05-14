@@ -9,17 +9,17 @@ Resources:
       Runtime: nodejs20.x
       Architectures:
         - x86_64
-      Timeout: 900
+      Timeout: 60
       MemorySize: 2048
       Layers:
         - !Ref upworkApplyBotLayer
-      Events:
-        1minute:
-          Type: Schedule
-          Properties:
-            Schedule: rate(2 hours)
-            Description: run job collecting every 2 hours
-            Enabled: true
+      # Events:
+      #   1minute:
+      #     Type: Schedule
+      #     Properties:
+      #       Schedule: rate(1 hour)
+      #       Description: run job collecting every 1 hour
+      #       Enabled: true
   # -------------------------------
   submitProposalFunction:
     Type: AWS::Serverless::Function
@@ -29,8 +29,21 @@ Resources:
       Runtime: nodejs20.x
       Architectures:
         - x86_64
-      Timeout: 900
+      Timeout: 60
       MemorySize: 2048
+      Layers:
+        - !Ref upworkApplyBotLayer
+  # -------------------------------
+  triggerLambasForAccountsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: triggerLambasForAccounts/
+      Handler: app.triggerLambasForAccountsHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Timeout: 60
+      MemorySize: 1024
       Layers:
         - !Ref upworkApplyBotLayer
   # -------------------------------

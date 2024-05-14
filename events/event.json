@@ -1,5 +1,4 @@
 {
-  "body": "{\"message\": \"hello from lambda its ADLON\"}",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",
