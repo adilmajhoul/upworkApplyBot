@@ -65,35 +65,7 @@ export async function main() {
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  async function goToJobsListings(pageNumber) {
-    // https://www.upwork.com/nx/search/jobs/?nbs=1&per_page=50&q=web%20scraping&sort=recency
-    const queyParams = {
-      nbs: 1,
-      q: 'web scraping',
-      duration_v3: 'week',
-      per_page: '50',
-      sort: 'recency',
-    };
-
-    pageNumber ? (queyParams['page'] = pageNumber) : '';
-
-    const jobFilters = new util.JobFilters('upwork');
-    const jobsUrl = jobFilters.buildURL(queyParams);
-
-    console.log('🚀 ~ jobsUrl:', jobsUrl);
-
-    await pageProcessor.retry(
-      async () => {
-        await page.goto(jobsUrl, {
-          waitUntil: 'load',
-        });
-      },
-      TIMES_TO_RETRY,
-      WAIT_BEFORE_RETRY_AGAIN,
-    );
-  }
-
-  await goToJobsListings();
+  await pageProcessor.goToJobsListings();
   await new Promise((resolve) => setTimeout(resolve, 10000));
 
   let link;
@@ -108,22 +80,13 @@ export async function main() {
 
     const numericPostingTime = util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime);
 
-    const postingTimeFilter = 20;
+    const postingTimeFilter = 60;
     // check if offer is about scraping
     // check if offer in db
 
     // if (fakeDB.includes(link)) {
     //   return;
     // }
-
-    console.log({
-      jobTitle,
-      rawPostingTime,
-      numericPostingTime,
-      postingTimeFilter,
-      rawPostingTime,
-      link: 'upwork.com' + link,
-    });
 
     // const isJobInDatabase = await dynamo.getItem(link, 'upworkJobsLinks');
     // console.log('🚀 ~ processJobs ~ isJobInDatabase:', isJobInDatabase);
@@ -135,7 +98,20 @@ export async function main() {
     //   return 'break';
     // }
 
-    if (numericPostingTime > postingTimeFilter) return 'break';
+    if (postingTimeFilter >= util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime)) {
+      console.log({
+        jobTitle,
+        rawPostingTime,
+        numericPostingTime,
+        postingTimeFilter,
+        rawPostingTime,
+        link: 'upwork.com' + link,
+      });
+    } else {
+      return 'break';
+    }
+
+    // if (numericPostingTime >= postingTimeFilter) return 'break';
 
     // if (numericPostingTime <= postingTimeFilter) {
     //   // console.log({ jobTitle, rawPostingTime, link });
@@ -149,8 +125,8 @@ export async function main() {
     // check amount of proposal limit
     // send hob through sqs queue
 
-    if (iteration === arrayLength && numericPostingTime <= postingTimeFilter) {
-      await goToJobsListings(currentPageNumber);
+    if (iteration === arrayLength && postingTimeFilter >= numericPostingTime) {
+      await pageProcessor.goToJobsListings(currentPageNumber);
 
       currentPageNumber++;
     }

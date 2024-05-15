@@ -42,8 +42,8 @@ async function launchBrowser() {
 }
 function getConfig(site) {
   const upwork = {
-    email: 'adil33zayn@gmail.com',
-    password: 'upworkskhon1-',
+    email: process.env.UPWORK_EMAIL,
+    password: process.env.UPWORK_PASSWORD,
     USERNAME_INPUT_SELECTOR: '#login_username',
     PASSWORD_INPUT_SELECTOR: '#login_password',
     CONTUNE_BUTTON_SELECTOR: '#login_password_continue',
@@ -358,6 +358,34 @@ class PageProcessor {
 
     return match ? match[1] : 'No match found.';
   }
+
+  async goToJobsListings(pageNumber) {
+    // https://www.upwork.com/nx/search/jobs/?nbs=1&per_page=50&q=web%20scraping&sort=recency
+    const queyParams = {
+      nbs: 1,
+      q: 'developer',
+      duration_v3: 'week',
+      per_page: '50',
+      sort: 'recency',
+    };
+
+    pageNumber ? (queyParams['page'] = pageNumber) : '';
+
+    const urlBuilder = new UrlBuilder('upwork');
+    const jobsUrl = urlBuilder.buildUrl(queyParams);
+
+    console.log('🚀 ~ jobsUrl:', jobsUrl);
+
+    await this.retry(
+      async () => {
+        await this.page.goto(jobsUrl, {
+          waitUntil: 'load',
+        });
+      },
+      this.configs.TIMES_TO_RETRY,
+      this.configs.WAIT_BEFORE_RETRY_AGAIN,
+    );
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -372,7 +400,7 @@ type Location = 'United States' | 'Canada' | 'Mexico';
 type JobsPerPage = 10 | 20 | 50 | 100;
 type SortBy = 'recency' | 'relevance';
 */
-class JobFilters {
+class UrlBuilder {
   // https://www.upwork.com/nx/search/jobs/?contractor_tier=1,2&duration_v3=week&location=United%20States&per_page=50&q=web%20data%20scraping&sort=recency
 
   constructor(site) {
@@ -390,7 +418,7 @@ class JobFilters {
     }
   }
 
-  buildURL(queryParams) {
+  buildUrl(queryParams) {
     const queriesList = {};
 
     for (let param in queryParams) {
@@ -486,4 +514,4 @@ export function getCurrentTimeInMinutes() {
 
 // console.log(getCurrentTimeInMinutes() - convertTimeAgoToValideDate(' 31 minutes ago'.trim()));
 
-export { PageProcessor, launchBrowser_local, launchBrowser, JobFilters, Dynamo };
+export { PageProcessor, launchBrowser_local, launchBrowser, UrlBuilder, Dynamo };
