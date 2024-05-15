@@ -67,22 +67,24 @@ export const findJobsHandler = async (event, context) => {
 
   // ------- check if you are actually logged in using ui clues or browser storage !! -----------
 
-  // await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  async function goToJobsListings(page = 1) {
+  async function goToJobsListings(pageNumber) {
+    // https://www.upwork.com/nx/search/jobs/?nbs=1&per_page=50&q=web%20scraping&sort=recency
     const queyParams = {
       nbs: 1,
       q: 'web scraping',
-      contractor_tier: '1,2',
       duration_v3: 'week',
-      location: 'United States',
       per_page: '50',
       sort: 'recency',
-      page,
     };
+
+    pageNumber ? (queyParams['page'] = pageNumber) : '';
 
     const jobFilters = new util.JobFilters('upwork');
     const jobsUrl = jobFilters.buildURL(queyParams);
+
+    console.log('🚀 ~ jobsUrl:', jobsUrl);
 
     await pageProcessor.retry(
       async () => {
@@ -95,28 +97,38 @@ export const findJobsHandler = async (event, context) => {
     );
   }
 
-  await goToJobsListings(1);
+  await goToJobsListings();
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
   let link;
-  let currentPageNumber = 1;
+  let currentPageNumber = 2;
   async function processJobs(element, arrayLength, iteration) {
     link = element.find(JOB_LINK_SELECTOR).attr('href');
-    const postedTime = element.find(JOB_POSTING_TIME_SELECTOR).text();
+    const jobTitle = element.find(JOB_LINK_SELECTOR).text();
+    const rawPostingTime = element.find(JOB_POSTING_TIME_SELECTOR).text().trim();
 
-    const currentElementPostingTime =
-      pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(postedTime);
-    const postingTimeFilter = 720;
+    // const numericPostingTime =
+    // pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(rawPostingTime);
+
+    const numericPostingTime = util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime);
+
+    const postingTimeFilter = 20;
     // check if offer is about scraping
     // check if offer in db
 
-    // if (fakeDB.includes(link)) {
-    //   return;
-    // }
+    console.log({
+      jobTitle,
+      rawPostingTime,
+      numericPostingTime,
+      postingTimeFilter,
+      rawPostingTime,
+      link: 'upwork.com' + link,
+    });
 
-    if (currentElementPostingTime <= postingTimeFilter) {
-      console.log(postedTime);
-      console.log(link);
+    const isJobInDatabase = await dynamo.getItem(link, 'upworkJobsLinks');
+    console.log('🚀 ~ processJobs ~ isJobInDatabase:', isJobInDatabase);
 
+    if (numericPostingTime <= postingTimeFilter && !isJobInDatabase && rawPostingTime != 'yesterday') {
       const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
       console.log('🚀 dynamoStatues:', dynamoStatues);
     } else {
@@ -126,20 +138,22 @@ export const findJobsHandler = async (event, context) => {
     // check amount of proposal limit
     // send hob through sqs queue
 
-    if (iteration === arrayLength && currentElementPostingTime <= postingTimeFilter) {
-      currentPageNumber++;
-
+    if (iteration === arrayLength && numericPostingTime <= postingTimeFilter) {
       await goToJobsListings(currentPageNumber);
+
+      currentPageNumber++;
     }
   }
 
   let sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
   await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
 
+  await new Promise((resolve) => setTimeout(resolve, 20000));
+
   // -----------------------------------------------------------------------------
   const pageTitle = await page.title();
   console.log('🚀 ~ pageTitle:', pageTitle);
-  // await browser.close();
+  await browser.close();
 
   /* if (job not in database){
 

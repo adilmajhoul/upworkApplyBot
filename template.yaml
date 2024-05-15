@@ -9,7 +9,7 @@ Resources:
       Runtime: nodejs20.x
       Architectures:
         - x86_64
-      Timeout: 60
+      Timeout: 900
       MemorySize: 2048
       Layers:
         - !Ref upworkApplyBotLayer
@@ -29,7 +29,7 @@ Resources:
       Runtime: nodejs20.x
       Architectures:
         - x86_64
-      Timeout: 60
+      Timeout: 900
       MemorySize: 2048
       Layers:
         - !Ref upworkApplyBotLayer

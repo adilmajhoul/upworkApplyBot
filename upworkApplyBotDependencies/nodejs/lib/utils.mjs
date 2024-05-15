@@ -8,7 +8,7 @@ import chromium from '@sparticuz/chromium';
 import url from 'url';
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { PutCommand, GetCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 // AWS.config.update({
 //   region: 'us-east-1',
@@ -415,9 +415,8 @@ class Dynamo {
   }
 
   async insertItem(link, TableName) {
-    // const jobId = link.split('?')[0];
     const jobId = this.pageProcessor.getSubString(link, /~([a-f0-9]{18})\//);
-    console.log('🚀 jobId:', jobId);
+    console.log('🚀 dynamo - jobId:', jobId);
 
     const params = {
       TableName,
@@ -429,8 +428,31 @@ class Dynamo {
 
     try {
       const result = await this.docClient.send(new PutCommand(params));
-      console.log(`Successfully inserted item with id ${jobId}`);
+      console.log('🚀 ~ Dynamo ~ insertItem ~ result:', result);
       return result;
+    } catch (error) {
+      console.error(`Error inserting item: ${error.message}`);
+      return error.message;
+    }
+  }
+
+  async getItem(link, TableName) {
+    const jobId = this.pageProcessor.getSubString(link, /~([a-f0-9]{18})\//);
+    console.log('🚀 dynamo - jobId:', jobId);
+
+    const params = {
+      TableName,
+      Item: {
+        jobId,
+        link,
+      },
+    };
+
+    try {
+      const response = await this.docClient.send(new GetCommand(params));
+      console.log('🚀 ~ Dynamo ~ getItem ~ response:', response);
+
+      return response;
     } catch (error) {
       console.error(`Error inserting item: ${error.message}`);
       return error.message;

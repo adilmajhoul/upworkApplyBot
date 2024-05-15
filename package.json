@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "prettier": "3.2.5"
+  },
+  "scripts": {
+    "findjobs": "sudo sam build && sudo sam local invoke --event events/event.json findJobsFunction --log-file findJobs/output.log"
   }
 }

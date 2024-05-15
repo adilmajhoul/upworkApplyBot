@@ -41,7 +41,7 @@ const JOB_LINK_SELECTOR = 'a.up-n-link';
 
 puppeteer.use(StealthPlugin());
 
-async function main() {
+export async function main() {
   //TODO:
   function siteConfig() {
     // if (even.site === upwork) {
@@ -108,7 +108,7 @@ async function main() {
 
     const numericPostingTime = util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime);
 
-    const postingTimeFilter = 480;
+    const postingTimeFilter = 20;
     // check if offer is about scraping
     // check if offer in db
 
@@ -124,7 +124,19 @@ async function main() {
       rawPostingTime,
       link: 'upwork.com' + link,
     });
-    480;
+
+    // const isJobInDatabase = await dynamo.getItem(link, 'upworkJobsLinks');
+    // console.log('🚀 ~ processJobs ~ isJobInDatabase:', isJobInDatabase);
+
+    // if (numericPostingTime <= postingTimeFilter && !isJobInDatabase && rawPostingTime != 'yesterday') {
+    //   const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
+    //   console.log('🚀 dynamoStatues:', dynamoStatues);
+    // } else {
+    //   return 'break';
+    // }
+
+    if (numericPostingTime > postingTimeFilter) return 'break';
+
     // if (numericPostingTime <= postingTimeFilter) {
     //   // console.log({ jobTitle, rawPostingTime, link });
 
@@ -171,5 +183,3 @@ async function main() {
 
   */
 }
-
-main().catch(console.error);
