@@ -10,6 +10,8 @@ import url from 'url';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { PutCommand, GetCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
+import process from 'process';
+
 // AWS.config.update({
 //   region: 'us-east-1',
 //   accessKeyId: 'AKIAVRUVRGU2ZH32YPPD',
