@@ -65,75 +65,51 @@ export async function main() {
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  await pageProcessor.goToJobsListings();
-  await new Promise((resolve) => setTimeout(resolve, 10000));
+  // await pageProcessor.goToJobsListings();
+  // await new Promise((resolve) => setTimeout(resolve, 10000));
 
-  let link;
-  let currentPageNumber = 2;
-  async function processJobs(element, arrayLength, iteration) {
-    link = element.find(JOB_LINK_SELECTOR).attr('href');
-    const jobTitle = element.find(JOB_LINK_SELECTOR).text();
-    const rawPostingTime = element.find(JOB_POSTING_TIME_SELECTOR).text().trim();
+  // let link;
+  // let currentPageNumber = 1;
 
-    // const numericPostingTime =
-    // pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(rawPostingTime);
+  // *************************************************************
 
-    const numericPostingTime = util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime);
+  let currentPageNumber = 1;
+  console.log('🚀 ~ main ~ currentPageNumber:', currentPageNumber);
+  while (true) {
+    await pageProcessor.goToJobsListings(currentPageNumber);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const postingTimeFilter = 60;
-    // check if offer is about scraping
-    // check if offer in db
+    const sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
+    let extractionStatus = await pageProcessor.processAllMatchingSelector(
+      SINGLE_JOB_CARD_SELECTOR,
+      sectionHtml,
+      pageProcessor.processJobs,
+    );
+    console.log('🚀 ~ main ~ extractionStatus:', extractionStatus);
 
-    // if (fakeDB.includes(link)) {
-    //   return;
-    // }
+    currentPageNumber++;
 
-    // const isJobInDatabase = await dynamo.getItem(link, 'upworkJobsLinks');
-    // console.log('🚀 ~ processJobs ~ isJobInDatabase:', isJobInDatabase);
-
-    // if (numericPostingTime <= postingTimeFilter && !isJobInDatabase && rawPostingTime != 'yesterday') {
-    //   const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
-    //   console.log('🚀 dynamoStatues:', dynamoStatues);
-    // } else {
-    //   return 'break';
-    // }
-
-    if (postingTimeFilter >= util.getCurrentTimeInMinutes() - util.convertTimeAgoToValideDate(rawPostingTime)) {
-      console.log({
-        jobTitle,
-        rawPostingTime,
-        numericPostingTime,
-        postingTimeFilter,
-        rawPostingTime,
-        link: 'upwork.com' + link,
-      });
-    } else {
-      return 'break';
-    }
-
-    // if (numericPostingTime >= postingTimeFilter) return 'break';
-
-    // if (numericPostingTime <= postingTimeFilter) {
-    //   // console.log({ jobTitle, rawPostingTime, link });
-
-    //   const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
-    //   console.log('🚀 dynamoStatues:', dynamoStatues);
-    // } else {
-    //   return 'break';
-    // }
-
-    // check amount of proposal limit
-    // send hob through sqs queue
-
-    if (iteration === arrayLength && postingTimeFilter >= numericPostingTime) {
-      await pageProcessor.goToJobsListings(currentPageNumber);
-
-      currentPageNumber++;
+    // iteration === arrayLength && numericPostingTime <= postingTimeFilter
+    if (extractionStatus === 'go_next_page') {
+      continue;
+    } else if (extractionStatus === 'break') {
+      break;
     }
   }
+  // *************************************************************
 
-  let sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
-  await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
+  // let sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
+  // let whattodo = await pageProcessor.processAllMatchingSelector(
+  //   SINGLE_JOB_CARD_SELECTOR,
+  //   sectionHtml,
+  //   processJobs,
+  // );
+
+  // while (whattodo === 'go_next_page') {
+  //   await pageProcessor.goToJobsListings(currentPageNumber);
+
+  //   whattodo = await pageProcessor.processAllMatchingSelector(SINGLE_JOB_CARD_SELECTOR, sectionHtml, processJobs);
+  // }
 
   await new Promise((resolve) => setTimeout(resolve, 20000));
 

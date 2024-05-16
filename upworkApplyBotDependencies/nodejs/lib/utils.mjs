@@ -65,6 +65,9 @@ function getConfig(site) {
     JOBS_PER_PAGE_DROPDOWN_BUTTON_SELECTOR:
       '#main > div.container > div:nth-child(4) > div > div.air3-grid-container.jobs-grid-container > div.span-12.span-lg-9 > div.air3-card-section.d-lg-flex.justify-space-between > div.d-none.d-lg-block > div > div > div > span',
     JOBS_PER_PAGE_DROPDOWN_50_OPTION_SELECTOR: '#dropdown-menu > li:nth-child(3) > span > span',
+    JOB_LINK_SELECTOR: 'a.up-n-link',
+    JOB_POSTING_TIME_SELECTOR: 'div > small > span:nth-child(2)',
+
     TIMES_TO_RETRY: 1000,
     WAIT_BEFORE_RETRY_AGAIN: 10,
   };
@@ -125,7 +128,7 @@ class PageProcessor {
     await this.page.click(SEARCH_BUTTON_SELECTOR);
   }
 
-  async processAllMatchingSelector(selector, html, processEachElementCallback) {
+  async processAllMatchingSelector_simple(selector, html, processEachElementCallback) {
     const $ = this.createCheerioObject(html);
     const elementsArray = $(selector).toArray();
 
@@ -139,6 +142,109 @@ class PageProcessor {
 
       iteration++;
     }
+  }
+
+  async processAllMatchingSelector(selector, html, processEachElementCallback) {
+    const $ = this.createCheerioObject(html);
+    const elementsArray = $(selector).toArray();
+
+    const arrayLength = elementsArray.length;
+    let iteration = 1;
+
+    let result = '';
+
+    for (const el of elementsArray) {
+      const statues = processEachElementCallback($(el), arrayLength, iteration);
+      iteration++;
+
+      if (statues === 'break') {
+        result = 'break';
+        break;
+      } else if (statues === 'go_next_page') {
+        result = 'go_next_page';
+        break;
+      }
+    }
+
+    // return a default value if no condition was met
+    if (result === '') {
+      result = 'no_action';
+    }
+
+    console.log('🚀 ~ processAllMatchingSelector ~ result:', result);
+
+    return result;
+  }
+
+  async processJobs(element, arrayLength, iteration) {
+    const JOB_LINK_SELECTOR = 'a.up-n-link';
+    const JOB_POSTING_TIME_SELECTOR = 'div > small > span:nth-child(2)';
+
+    let link = element.find(JOB_LINK_SELECTOR).attr('href');
+    const jobTitle = element.find(JOB_LINK_SELECTOR).text();
+    const rawPostingTime = element.find(JOB_POSTING_TIME_SELECTOR).text().trim();
+
+    // const numericPostingTime =
+    // pageProcessor.getCurrentTimeInMinutes() - pageProcessor.convertTimeAgoToValideDate(rawPostingTime);
+
+    const numericPostingTime = getCurrentTimeInMinutes() - convertTimeAgoToValideDate(rawPostingTime);
+    const postingTimeFilter = 60;
+
+    // check if offer is about scraping
+    // check if offer in db
+
+    // if (fakeDB.includes(link)) {
+    //   return;
+    // }
+
+    // const isJobInDatabase = await dynamo.getItem(link, 'upworkJobsLinks');
+    // console.log('🚀 ~ processJobs ~ isJobInDatabase:', isJobInDatabase);
+
+    // if (numericPostingTime <= postingTimeFilter && !isJobInDatabase && rawPostingTime != 'yesterday') {
+    //   const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
+    //   console.log('🚀 dynamoStatues:', dynamoStatues);
+    // } else {
+    //   return 'break';
+    // }
+
+    if (numericPostingTime <= postingTimeFilter) {
+      console.log({
+        jobTitle,
+        rawPostingTime,
+        numericPostingTime,
+        postingTimeFilter,
+        rawPostingTime,
+        link: 'upwork.com' + link,
+        iteration,
+        arrayLength,
+      });
+    } else {
+      return 'break';
+    }
+
+    if (iteration === arrayLength) {
+      return 'go_next_page';
+    }
+
+    // if (numericPostingTime >= postingTimeFilter) return 'break';
+
+    // if (numericPostingTime <= postingTimeFilter) {
+    //   // console.log({ jobTitle, rawPostingTime, link });
+
+    //   const dynamoStatues = await dynamo.insertItem(link, 'upworkJobsLinks');
+    //   console.log('🚀 dynamoStatues:', dynamoStatues);
+    // } else {
+    //   return 'break';
+    // }
+
+    // check amount of proposal limit
+    // send hob through sqs queue
+
+    // if (iteration === arrayLength && numericPostingTime <= postingTimeFilter) {
+    //   await pageProcessor.goToJobsListings(currentPageNumber);
+
+    //   currentPageNumber++;
+    // }
   }
 
   async getAllMatchingSelector(selector, html) {
@@ -365,13 +471,14 @@ class PageProcessor {
     // https://www.upwork.com/nx/search/jobs/?nbs=1&per_page=50&q=web%20scraping&sort=recency
     const queyParams = {
       nbs: 1,
+      page: pageNumber,
       q: 'developer',
       duration_v3: 'week',
       per_page: '50',
       sort: 'recency',
     };
 
-    pageNumber ? (queyParams['page'] = pageNumber) : '';
+    // pageNumber ? (queyParams['page'] = pageNumber) : '';
 
     const urlBuilder = new UrlBuilder('upwork');
     const jobsUrl = urlBuilder.buildUrl(queyParams);
