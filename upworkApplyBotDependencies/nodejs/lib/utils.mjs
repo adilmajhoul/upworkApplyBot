@@ -612,19 +612,20 @@ export function convertTimeAgoToValideDate(timeString) {
   if (!timeString || !timeString.includes('ago')) return 0;
 
   const timeUnits = {
-    minute: 60 * 1000,
-    hour: 60 * 60 * 1000,
-    day: 24 * 60 * 60 * 1000,
+    minute: 60,
+    hour: 60 * 60,
+    day: 24 * 60 * 60,
   };
 
   const [amount, unit, ago] = timeString.split(' ');
 
-  const amountNum = parseInt(amount, 10);
+  const amountNum = parseInt(amount);
 
   const unitWithoutPluralS = timeUnits[unit] ? unit : unit.slice(0, -1);
-  let timeInPosixFormat = amountNum * timeUnits[unitWithoutPluralS];
 
-  const timeInMinutes = Math.floor((Date.now() - timeInPosixFormat) / 60 / 1000);
+  let timeInMinutes = Math.floor(amountNum * timeUnits[unitWithoutPluralS]);
+
+  // const timeInMinutes = Math.floor((Date.now() - timeInPosixFormat) / 60 / 1000);
 
   return timeInMinutes;
 }
