@@ -74,8 +74,10 @@ export async function main() {
   // *************************************************************
 
   let currentPageNumber = 1;
-  console.log('🚀 ~ main ~ currentPageNumber:', currentPageNumber);
   while (true) {
+    console.log('*************************************************************');
+    console.log({ currentPageNumber });
+
     await pageProcessor.goToJobsListings(currentPageNumber);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -85,12 +87,13 @@ export async function main() {
       sectionHtml,
       pageProcessor.processJobs,
     );
-    console.log('🚀 ~ main ~ extractionStatus:', extractionStatus);
 
-    currentPageNumber++;
+    console.log('🚀 ~ main ~ extractionStatus:', extractionStatus);
 
     // iteration === arrayLength && numericPostingTime <= postingTimeFilter
     if (extractionStatus === 'go_next_page') {
+      currentPageNumber++;
+
       continue;
     } else if (extractionStatus === 'break') {
       break;

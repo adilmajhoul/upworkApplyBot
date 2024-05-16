@@ -151,10 +151,18 @@ class PageProcessor {
     const arrayLength = elementsArray.length;
     let iteration = 1;
 
+    const lastElement = elementsArray.at(-1);
+
     let result = '';
 
+    let isItLastElement = false;
+
     for (const el of elementsArray) {
-      const statues = processEachElementCallback($(el), arrayLength, iteration);
+      if (el == lastElement) {
+        isItLastElement = true;
+      }
+      const statues = await processEachElementCallback($(el), arrayLength, iteration, isItLastElement);
+
       iteration++;
 
       if (statues === 'break') {
@@ -176,7 +184,7 @@ class PageProcessor {
     return result;
   }
 
-  async processJobs(element, arrayLength, iteration) {
+  async processJobs(element, arrayLength, iteration, isItLastElement) {
     const JOB_LINK_SELECTOR = 'a.up-n-link';
     const JOB_POSTING_TIME_SELECTOR = 'div > small > span:nth-child(2)';
 
@@ -218,15 +226,19 @@ class PageProcessor {
         iteration,
         arrayLength,
       });
-    } else {
+    } else if (numericPostingTime > postingTimeFilter) {
       return 'break';
     }
 
-    if (iteration === arrayLength) {
+    // if (iteration === arrayLength || (iteration >= 40 && )) {
+    //   return 'go_next_page';
+    // }
+
+    if (isItLastElement && numericPostingTime <= postingTimeFilter) {
       return 'go_next_page';
     }
 
-    // if (numericPostingTime >= postingTimeFilter) return 'break';
+    // if (numericPostingTime <= postingTimeFilter) return 'break';
 
     // if (numericPostingTime <= postingTimeFilter) {
     //   // console.log({ jobTitle, rawPostingTime, link });
