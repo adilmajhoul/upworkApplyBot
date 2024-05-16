@@ -78,8 +78,8 @@ export async function main() {
     console.log('*************************************************************');
     console.log({ currentPageNumber });
 
-    await pageProcessor.goToJobsListings(currentPageNumber);
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    await pageProcessor.goToJobsListings(currentPageNumber);
 
     const sectionHtml = await pageProcessor.getElementHtmlBySelector_(JOBS_SECTION_SELECTOR);
     let extractionStatus = await pageProcessor.processAllMatchingSelector(

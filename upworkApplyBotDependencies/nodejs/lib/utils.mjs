@@ -12,12 +12,6 @@ import { PutCommand, GetCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dyn
 
 import process from 'process';
 
-// AWS.config.update({
-//   region: 'us-east-1',
-//   accessKeyId: 'AKIAVRUVRGU2ZH32YPPD',
-//   secretAccessKey: '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',
-// });
-
 puppeteer.use(StealthPlugin());
 
 // promisify callback functions
@@ -187,7 +181,12 @@ class PageProcessor {
   async processJobs(element, arrayLength, iteration, isItLastElement) {
     const JOB_LINK_SELECTOR = 'a.up-n-link';
     const JOB_POSTING_TIME_SELECTOR = 'div > small > span:nth-child(2)';
+    const FEATURED_JOB_BUTTON_SELECTOR = 'div.air3-badge';
 
+    if (element.find(FEATURED_JOB_BUTTON_SELECTOR).text()) {
+      console.log('is it featured', element.find(FEATURED_JOB_BUTTON_SELECTOR).text());
+      return;
+    }
     let link = element.find(JOB_LINK_SELECTOR).attr('href');
     const jobTitle = element.find(JOB_LINK_SELECTOR).text();
     const rawPostingTime = element.find(JOB_POSTING_TIME_SELECTOR).text().trim();
@@ -480,7 +479,7 @@ class PageProcessor {
   }
 
   async goToJobsListings(pageNumber) {
-    // https://www.upwork.com/nx/search/jobs/?nbs=1&per_page=50&q=web%20scraping&sort=recency
+    // https://www.upwork.com/nx/search/jobs/?nbs=1&page=1&per_page=50&q=web%20scraping&sort=recency
     const queyParams = {
       nbs: 1,
       page: pageNumber,
