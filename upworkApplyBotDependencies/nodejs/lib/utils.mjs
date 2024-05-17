@@ -612,6 +612,7 @@ export function convertTimeAgoToValideDate(timeString) {
   if (!timeString || !timeString.includes('ago')) return 0;
 
   const timeUnits = {
+    second: 1,
     minute: 60,
     hour: 60 * 60,
     day: 24 * 60 * 60,
@@ -619,20 +620,19 @@ export function convertTimeAgoToValideDate(timeString) {
 
   const [amount, unit, ago] = timeString.split(' ');
 
-  const amountNum = parseInt(amount);
+  const amountNum = parseInt(amount, 10);
 
   const unitWithoutPluralS = timeUnits[unit] ? unit : unit.slice(0, -1);
 
-  let timeInMinutes = Math.floor(amountNum * timeUnits[unitWithoutPluralS]);
+  let timeInSeconds = amountNum * timeUnits[unitWithoutPluralS];
 
-  // const timeInMinutes = Math.floor((Date.now() - timeInPosixFormat) / 60 / 1000);
+  // convert seconds to min
+  const timeInMinutes = Math.floor(getCurrentTimeInMinutes() - timeInSeconds / 60);
 
   return timeInMinutes;
 }
 export function getCurrentTimeInMinutes() {
   return Math.floor(Date.now() / 60 / 1000);
 }
-
-// console.log(getCurrentTimeInMinutes() - convertTimeAgoToValideDate(' 31 minutes ago'.trim()));
 
 export { PageProcessor, launchBrowser_local, launchBrowser, UrlBuilder, Dynamo };
