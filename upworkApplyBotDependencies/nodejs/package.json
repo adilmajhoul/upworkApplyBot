@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.569.0",
-    "@aws-sdk/lib-dynamodb": "^3.569.0",
+    "@aws-sdk/lib-dynamodb": "^3.577.0",
     "@sparticuz/chromium": "^123.0.1",
     "aws-sdk": "^2.1615.0",
     "axios": ">=1.6.0",

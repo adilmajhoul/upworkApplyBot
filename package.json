@@ -3,6 +3,9 @@
     "prettier": "3.2.5"
   },
   "scripts": {
-    "findjobs": "sudo sam build && sudo sam local invoke --event events/event.json findJobsFunction --log-file findJobs/output.log"
+    "findjobs_build": "sudo sam build && sudo sam local invoke --event events/event.json findJobsFunction --log-file findJobs/output.log",
+    "findjobs_run": "sudo sam local invoke --event events/event.json findJobsFunction --log-file findJobs/output.log",
+    "api_build": "sudo sam build && sudo sam local invoke --event events/event.json apiFunction --log-file api/output.log",
+    "api_run": "sudo sam local invoke --event events/event.json apiFunction --log-file api/output.log"
   }
 }

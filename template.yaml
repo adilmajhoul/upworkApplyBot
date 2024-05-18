@@ -1,5 +1,6 @@
 Transform: AWS::Serverless-2016-10-31
 
+
 Resources:
   findJobsFunction:
     Type: AWS::Serverless::Function
@@ -10,7 +11,7 @@ Resources:
       Architectures:
         - x86_64
       Timeout: 900
-      MemorySize: 2048
+      MemorySize: 6144
       Layers:
         - !Ref upworkApplyBotLayer
       # Events:
@@ -20,12 +21,13 @@ Resources:
       #       Schedule: rate(1 hour)
       #       Description: run job collecting every 1 hour
       #       Enabled: true
+
   # -------------------------------
-  submitProposalFunction:
+  upworkBotApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: submitProposal/
-      Handler: app.submitProposalHandler
+      CodeUri: api/
+      Handler: app.upworkBotApiHandler
       Runtime: nodejs20.x
       Architectures:
         - x86_64
@@ -33,19 +35,7 @@ Resources:
       MemorySize: 2048
       Layers:
         - !Ref upworkApplyBotLayer
-  # -------------------------------
-  triggerLambasForAccountsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: triggerLambasForAccounts/
-      Handler: app.triggerLambasForAccountsHandler
-      Runtime: nodejs20.x
-      Architectures:
-        - x86_64
-      Timeout: 60
-      MemorySize: 1024
-      Layers:
-        - !Ref upworkApplyBotLayer
+
   # -------------------------------
   upworkApplyBotLayer:
     Type: AWS::Serverless::LayerVersion
@@ -57,3 +47,5 @@ Resources:
         - nodejs20.x
         - nodejs18.x
         - nodejs16.x
+
+

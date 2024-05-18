@@ -10,8 +10,6 @@ import url from 'url';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { PutCommand, GetCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-import process from 'process';
-
 puppeteer.use(StealthPlugin());
 
 // promisify callback functions
@@ -38,8 +36,9 @@ async function launchBrowser() {
 }
 function getConfig(site) {
   const upwork = {
-    email: process.env.UPWORK_EMAIL,
-    password: process.env.UPWORK_PASSWORD,
+    email: process.env.UPWORKEMAIL,
+    password: process.env.UPWORKPASSWORD,
+
     USERNAME_INPUT_SELECTOR: '#login_username',
     PASSWORD_INPUT_SELECTOR: '#login_password',
     CONTUNE_BUTTON_SELECTOR: '#login_password_continue',
