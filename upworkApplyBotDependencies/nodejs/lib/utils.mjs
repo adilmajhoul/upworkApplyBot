@@ -38,7 +38,6 @@ function getConfig(site) {
   const upwork = {
     email: process.env.UPWORKEMAIL,
     password: process.env.UPWORKPASSWORD,
-
     USERNAME_INPUT_SELECTOR: '#login_username',
     PASSWORD_INPUT_SELECTOR: '#login_password',
     CONTUNE_BUTTON_SELECTOR: '#login_password_continue',
