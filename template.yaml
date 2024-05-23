@@ -11,7 +11,7 @@ Resources:
       Architectures:
         - x86_64
       Timeout: 900
-      MemorySize: 6144
+      MemorySize: 3000
       Layers:
         - !Ref upworkApplyBotLayer
       # Events:
